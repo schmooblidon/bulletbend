@@ -1,18 +1,17 @@
 import {player} from "./player";
 import {physics} from "./physics";
-import {updateRenderObjects} from "./render";
+import {render} from "./render";
 import {overrideKeyboardEvent, findInput} from "./input";
-import {buildStage, updateStage} from "./stage";
 
 // setting up renderer
 const elem = document.getElementById("game");
 const params = {fullscreen : true};
 export const two = new Two(params).appendTo(elem);
 
-// build stage
-buildStage();
 // setting up player
 export const p = new player();
+
+export let bulletList = [];
 
 // setting up other variables
 let playing = false;
@@ -33,8 +32,7 @@ function gameLoop() {
   }
   if (playing) {
     physics(p);
-    updateStage();
-    updateRenderObjects(p);
+    render(p);
   }
   setTimeout(function(){gameLoop()}, 16.666667);
 }

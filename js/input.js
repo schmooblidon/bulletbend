@@ -3,6 +3,8 @@ export function input() {
   this.controllerType = "None";
   this.lStickX = [0];
   this.lStickY = [0];
+  this.rStickX = [0];
+  this.rStickY = [0];
   this.lTrigger = [0];
   this.rTrigger = [0];
   this.lBumper = [false];
@@ -13,11 +15,16 @@ export function input() {
   this.angle = [0];
   this.magnitude = [0];
 
+  this.rAngle = [0];
+  this.rMagnitude = [0];
+
   this.updateInput = function() {
     // push inputs back a frame in history
     for (let i=4;i>0;i--) {
       this.lStickX[i] = this.lStickX[i-1];
       this.lStickY[i] = this.lStickY[i-1];
+      this.rStickX[i] = this.rStickX[i-1];
+      this.rStickY[i] = this.rStickY[i-1];
       this.a[i] = this.a[i-1];
       this.lTrigger[i] = this.lTrigger[i-1];
       this.rTrigger[i] = this.rTrigger[i-1];
@@ -26,6 +33,8 @@ export function input() {
       this.s[i] = this.s[i-1];
       this.angle[i] = this.angle[i-1];
       this.magnitude[i] = this.magnitude[i-1];
+      this.rAngle[i] = this.rAngle[i-1];
+      this.rMagnitude[i] = this.rMagnitude[i-1];
     }
 
     // if using keyboard
@@ -53,6 +62,13 @@ export function input() {
           this.lStickX[0] = 0;
           this.lStickY[0] = 0;
         }
+
+        this.rStickX[0] = gamepad.axes[2];
+        this.rStickY[0] = gamepad.axes[3] * -1;
+        if (Math.abs(this.rStickY[0]) < 0.3 && Math.abs(this.rStickX[0]) < 0.3) {
+          this.rStickX[0] = 0;
+          this.rStickY[0] = 0;
+        }
         
         if (this.controllerType === "Xbox") {
           this.a[0] = gamepad.buttons[0].pressed;
@@ -76,6 +92,9 @@ export function input() {
     // calculate new inputs
     this.angle[0] = Math.atan2(this.lStickY[0], this.lStickX[0]);
     this.magnitude[0] = Math.min(1, Math.sqrt(Math.pow(this.lStickX[0], 2) + Math.pow(this.lStickY[0], 2)));
+
+    this.rAngle[0] = Math.atan2(this.rStickY[0], this.rStickX[0]);
+    this.rMagnitude[0] = Math.min(1, Math.sqrt(Math.pow(this.rStickX[0], 2) + Math.pow(this.rStickY[0], 2)));
   }
 }
 
