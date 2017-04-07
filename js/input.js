@@ -11,6 +11,9 @@ export function input() {
   this.rBumper = [false];
   this.a = [false];
   this.s = [false];
+  this.x = [false];
+  this.y = [false];
+  this.b = [false];
 
   this.angle = [0];
   this.magnitude = [0];
@@ -26,6 +29,9 @@ export function input() {
       this.rStickX[i] = this.rStickX[i-1];
       this.rStickY[i] = this.rStickY[i-1];
       this.a[i] = this.a[i-1];
+      this.x[i] = this.x[i-1];
+      this.y[i] = this.y[i-1];
+      this.b[i] = this.b[i-1];
       this.lTrigger[i] = this.lTrigger[i-1];
       this.rTrigger[i] = this.rTrigger[i-1];
       this.lBumper[i] = this.lBumper[i-1];
@@ -72,6 +78,9 @@ export function input() {
         
         if (this.controllerType === "Xbox") {
           this.a[0] = gamepad.buttons[0].pressed;
+          this.b[0] = gamepad.buttons[1].pressed;
+          this.x[0] = gamepad.buttons[2].pressed;
+          this.y[0] = gamepad.buttons[3].pressed;
           this.lTrigger[0] = gamepad.buttons[6].value;
           this.rTrigger[0] = gamepad.buttons[7].value;
           this.lBumper[0] = gamepad.buttons[4].pressed;

@@ -1,4 +1,4 @@
-import {bulletList} from "./main";
+import {bulletList, time, setTime} from "./main";
 import {bullet} from "./bullet"; 
 
 export function physics(p) {
@@ -65,22 +65,11 @@ export function physics(p) {
     }
   }
 
-  p.pos.x += p.vel.x * 6;
-  p.pos.y += p.vel.y * 6;
-
   if (p.input.rMagnitude[0] > 0) {
-    p.armAngle = p.input.rAngle[0];
+    p.facingAngle = p.input.rAngle[0];
   }
 
-  if (!p.gunLockout) {
-    if (p.input.rTrigger[0] >= 0.3) {
-      bulletList.push(new bullet(p, p.armAngle, p.pos.x + Math.cos(p.armAngle) * p.armLength, p.pos.y + Math.sin(p.armAngle) * p.armLength));
-      p.gunLockout = true;
-    }
-  }
-  else if (p.input.rTrigger[0] < 0.3) {
-    p.gunLockout = false;
-  }
+  p.stateMachine[p.currentState].main(p);
 
   let destroyQueue = [];
   for (let i=0;i<bulletList.length;i++) {
@@ -92,4 +81,10 @@ export function physics(p) {
     bulletList[destroyQueue[i]-i].shell.remove();
     bulletList.splice(destroyQueue[i]-i,1);
   }
+
+  setTime(Math.max(0.25, 1 - p.input.lTrigger[0]));
+
+
+  p.pos.x += p.vel.x * 6 * time;
+  p.pos.y += p.vel.y * 6 * time;
 }

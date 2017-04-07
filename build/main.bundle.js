@@ -63,11 +63,98 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.time = exports.bulletList = exports.p = exports.two = undefined;
+exports.setTime = setTime;
+
+var _player = __webpack_require__(4);
+
+var _physics = __webpack_require__(3);
+
+var _render = __webpack_require__(5);
+
+var _input = __webpack_require__(1);
+
+// setting up renderer
+var elem = document.getElementById("game");
+var params = { fullscreen: true };
+var two = exports.two = new Two(params).appendTo(elem);
+
+// setting up player
+var p = exports.p = new _player.player();
+
+var bulletList = exports.bulletList = [];
+
+// setting up other variables
+var playing = false;
+var time = exports.time = 1;
+
+function setTime(t) {
+  exports.time = time = t;
+}
+
+// storing html elements
+var startPrompt = document.getElementById("startPrompt");
+var pauseScreen = document.getElementById("pause");
+
+// always handy to have this ready to inspect
+console.log(navigator.getGamepads());
+
+// defining the game logic loop
+function gameLoop() {
+  // get current input
+  p.input.updateInput();
+  // if hit start, pause/unpause
+  if (p.input.s[0] && !p.input.s[1]) {
+    playing ^= true;
+    pauseScreen.style.display = playing ? "none" : "block";
+  }
+  if (playing) {
+    (0, _physics.physics)(p);
+    (0, _render.render)(p);
+  }
+  setTimeout(function () {
+    gameLoop();
+  }, 16.666667);
+}
+
+// when page is loaded and it asks for input
+function start() {
+  if (!playing) {
+    if ((0, _input.findInput)(p)) {
+      // start game logic and render loops
+      p.input.s[0] = true;
+      playing = true;
+      startPrompt.remove();
+      gameLoop();
+      two.play();
+    }
+    setTimeout(function () {
+      start();
+    }, 16.6666667);
+  }
+}
+
+// overriding keyboard events to disable unwanted events and store properly
+document.onkeydown = _input.overrideKeyboardEvent;
+document.onkeyup = _input.overrideKeyboardEvent;
+
+start();
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -92,6 +179,9 @@ function input() {
   this.rBumper = [false];
   this.a = [false];
   this.s = [false];
+  this.x = [false];
+  this.y = [false];
+  this.b = [false];
 
   this.angle = [0];
   this.magnitude = [0];
@@ -107,6 +197,9 @@ function input() {
       this.rStickX[i] = this.rStickX[i - 1];
       this.rStickY[i] = this.rStickY[i - 1];
       this.a[i] = this.a[i - 1];
+      this.x[i] = this.x[i - 1];
+      this.y[i] = this.y[i - 1];
+      this.b[i] = this.b[i - 1];
       this.lTrigger[i] = this.lTrigger[i - 1];
       this.rTrigger[i] = this.rTrigger[i - 1];
       this.lBumper[i] = this.lBumper[i - 1];
@@ -152,6 +245,9 @@ function input() {
 
           if (this.controllerType === "Xbox") {
             this.a[0] = gamepad.buttons[0].pressed;
+            this.b[0] = gamepad.buttons[1].pressed;
+            this.x[0] = gamepad.buttons[2].pressed;
+            this.y[0] = gamepad.buttons[3].pressed;
             this.lTrigger[0] = gamepad.buttons[6].value;
             this.rTrigger[0] = gamepad.buttons[7].value;
             this.lBumper[0] = gamepad.buttons[4].pressed;
@@ -241,7 +337,7 @@ function disabledEventPropagation(e) {
 }
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -250,77 +346,21 @@ function disabledEventPropagation(e) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.bulletList = exports.p = exports.two = undefined;
+exports.Vec = Vec;
+function Vec() {
+  var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+  var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
-var _player = __webpack_require__(3);
+  this.x = x;
+  this.y = y;
 
-var _physics = __webpack_require__(2);
-
-var _render = __webpack_require__(4);
-
-var _input = __webpack_require__(0);
-
-// setting up renderer
-var elem = document.getElementById("game");
-var params = { fullscreen: true };
-var two = exports.two = new Two(params).appendTo(elem);
-
-// setting up player
-var p = exports.p = new _player.player();
-
-var bulletList = exports.bulletList = [];
-
-// setting up other variables
-var playing = false;
-var startPrompt = document.getElementById("startPrompt");
-var pauseScreen = document.getElementById("pause");
-
-// always handy to have this ready to inspect
-console.log(navigator.getGamepads());
-
-// defining the game logic loop
-function gameLoop() {
-  // get current input
-  p.input.updateInput();
-  // if hit start, pause/unpause
-  if (p.input.s[0] && !p.input.s[1]) {
-    playing ^= true;
-    pauseScreen.style.display = playing ? "none" : "block";
-  }
-  if (playing) {
-    (0, _physics.physics)(p);
-    (0, _render.render)(p);
-  }
-  setTimeout(function () {
-    gameLoop();
-  }, 16.666667);
+  this.Dot = function (vec) {
+    return this.x * vec.x + this.y * vec.y;
+  };
 }
-
-// when page is loaded and it asks for input
-function start() {
-  if (!playing) {
-    if ((0, _input.findInput)(p)) {
-      // start game logic and render loops
-      p.input.s[0] = true;
-      playing = true;
-      startPrompt.remove();
-      gameLoop();
-      two.play();
-    }
-    setTimeout(function () {
-      start();
-    }, 16.6666667);
-  }
-}
-
-// overriding keyboard events to disable unwanted events and store properly
-document.onkeydown = _input.overrideKeyboardEvent;
-document.onkeyup = _input.overrideKeyboardEvent;
-
-start();
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -331,9 +371,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.physics = physics;
 
-var _main = __webpack_require__(1);
+var _main = __webpack_require__(0);
 
-var _bullet = __webpack_require__(8);
+var _bullet = __webpack_require__(6);
 
 function physics(p) {
   if (p.input.magnitude[0] > 0) {
@@ -392,21 +432,11 @@ function physics(p) {
     }
   }
 
-  p.pos.x += p.vel.x * 6;
-  p.pos.y += p.vel.y * 6;
-
   if (p.input.rMagnitude[0] > 0) {
-    p.armAngle = p.input.rAngle[0];
+    p.facingAngle = p.input.rAngle[0];
   }
 
-  if (!p.gunLockout) {
-    if (p.input.rTrigger[0] >= 0.3) {
-      _main.bulletList.push(new _bullet.bullet(p, p.armAngle, p.pos.x + Math.cos(p.armAngle) * p.armLength, p.pos.y + Math.sin(p.armAngle) * p.armLength));
-      p.gunLockout = true;
-    }
-  } else if (p.input.rTrigger[0] < 0.3) {
-    p.gunLockout = false;
-  }
+  p.stateMachine[p.currentState].main(p);
 
   var destroyQueue = [];
   for (var i = 0; i < _main.bulletList.length; i++) {
@@ -418,55 +448,11 @@ function physics(p) {
     _main.bulletList[destroyQueue[_i] - _i].shell.remove();
     _main.bulletList.splice(destroyQueue[_i] - _i, 1);
   }
-}
 
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
+  (0, _main.setTime)(Math.max(0.25, 1 - p.input.lTrigger[0]));
 
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.player = player;
-
-var _Vec = __webpack_require__(7);
-
-var _CircleCollider = __webpack_require__(5);
-
-var _main = __webpack_require__(1);
-
-var _input = __webpack_require__(0);
-
-function player() {
-  this.pos = new _Vec.Vec();
-
-  this.vel = new _Vec.Vec();
-  this.friction = 0.15;
-  this.walkSpeed = 1.7;
-
-  this.gunLockout = false;
-
-  this.armAngle = Math.PI / 2;
-
-  this.collider = new _CircleCollider.CircleCollider();
-
-  this.head = _main.two.makeCircle(0, 0, 20);
-
-  this.head.fill = "#fff";
-  this.head.noStroke();
-
-  this.armLength = 55;
-  this.arm = _main.two.makeLine(0, 0, 0, 0);
-  this.arm.stroke = "#fff";
-  this.arm.linewidth = 5;
-
-  this.body = _main.two.makeGroup(this.head, this.arm);
-  this.body.translation.set(_main.two.width / 2, _main.two.height / 2);
-
-  this.input = new _input.input();
+  p.pos.x += p.vel.x * 6 * _main.time;
+  p.pos.y += p.vel.y * 6 * _main.time;
 }
 
 /***/ }),
@@ -479,20 +465,90 @@ function player() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.render = render;
+exports.player = player;
 
-var _main = __webpack_require__(1);
+var _Vec = __webpack_require__(2);
 
-function render(p) {
+var _CircleCollider = __webpack_require__(7);
 
-  p.arm.vertices[1].x = Math.cos(p.armAngle) * p.armLength;
-  p.arm.vertices[1].y = -Math.sin(p.armAngle) * p.armLength;
+var _main = __webpack_require__(0);
 
-  for (var i = 0; i < _main.bulletList.length; i++) {
-    _main.bulletList[i].shell.translation.set(_main.two.width / 2 + _main.bulletList[i].pos.x, _main.two.height / 2 - _main.bulletList[i].pos.y);
-  }
+var _input = __webpack_require__(1);
 
-  p.body.translation.set(_main.two.width / 2 + p.pos.x, _main.two.height / 2 + p.pos.y * -1);
+var _Guns = __webpack_require__(11);
+
+var _StateMachine = __webpack_require__(9);
+
+function player() {
+  this.pos = new _Vec.Vec();
+
+  this.vel = new _Vec.Vec();
+  this.friction = 0.15;
+  this.walkSpeed = 1.7;
+
+  this.gunLockout = false;
+  this.gunLockoutTimer = 0;
+
+  this.guns = new _Guns.Guns();
+  this.currentGun = 0;
+  this.gunList = ["pistol", "machineGun"];
+  this.stateMachine = new _StateMachine.StateMachine();
+  this.currentState = "wait";
+
+  this.switchGun = function (move) {
+    this.currentGun += move;
+    if (this.currentGun > this.gunList.length - 1) {
+      this.currentGun = 0;
+    } else if (this.currentGun < 0) {
+      this.currentGun = this.gunList.length - 1;
+    }
+  };
+
+  this.bulletTimeActive = false;
+
+  this.facingAngle = Math.PI / 2;
+
+  this.collider = new _CircleCollider.CircleCollider();
+
+  this.head = _main.two.makeCircle(0, 0, 20);
+
+  this.head.fill = "#c89";
+  this.head.noStroke();
+
+  this.upperArm = _main.two.makeLine(0, 0, 0, 0);
+  this.foreArm = _main.two.makeLine(0, 0, 0, 0);
+
+  this.upperArmAngle = Math.PI / 8;
+  this.upperArmLength = 30;
+  this.upperArm.stroke = "#c89";
+  this.upperArm.linewidth = 5;
+
+  this.foreArmAngle = -Math.PI / 8;
+  this.foreArmLength = 30;
+  this.foreArm.stroke = "#c89";
+  this.foreArm.linewidth = 5;
+
+  this.arm = _main.two.makeGroup(this.upperArm, this.foreArm);
+  //this.arm.stroke = "#fff";
+  //this.arm.linewidth = 5;
+
+  this.gunShape = _main.two.makeLine(0, 0, 0, 0);
+  this.gunShape.stroke = "#000";
+  this.gunShape.linewidth = 8;
+
+  this.leftLeg = _main.two.makeLine(0, -15, 0, -15);
+  this.rightLeg = _main.two.makeLine(0, 15, 0, 15);
+  this.legs = _main.two.makeGroup(this.leftLeg, this.rightLeg);
+  this.legs.stroke = "#c89";
+  this.legs.linewidth = 5;
+
+  this.walkCycle = 0;
+  this.walkDirection = 1;
+
+  this.body = _main.two.makeGroup(this.legs, this.arm, this.gunShape, this.head);
+  this.body.translation.set(_main.two.width / 2, _main.two.height / 2);
+
+  this.input = new _input.input();
 }
 
 /***/ }),
@@ -505,9 +561,106 @@ function render(p) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.render = render;
+
+var _main = __webpack_require__(0);
+
+function render(p) {
+
+  p.upperArm.vertices[1].x = Math.cos(-p.upperArmAngle) * p.upperArmLength;
+  p.upperArm.vertices[1].y = -Math.sin(-p.upperArmAngle) * p.upperArmLength;
+
+  p.foreArm.vertices[0].x = p.upperArm.vertices[1].x;
+  p.foreArm.vertices[0].y = p.upperArm.vertices[1].y;
+
+  p.foreArm.vertices[1].x = p.foreArm.vertices[0].x + Math.cos(-p.foreArmAngle) * p.foreArmLength;
+  p.foreArm.vertices[1].y = p.foreArm.vertices[0].y - Math.sin(-p.foreArmAngle) * p.foreArmLength;
+
+  p.gunShape.vertices[0].x = p.foreArm.vertices[1].x;
+  p.gunShape.vertices[0].y = p.foreArm.vertices[1].y;
+  p.gunShape.vertices[1].x = p.gunShape.vertices[0].x + 15;
+  p.gunShape.vertices[1].y = p.gunShape.vertices[0].y;
+
+  if (Math.abs(p.vel.x) > 0 || Math.abs(p.vel.y) > 0) {
+    var magnitude = Math.sqrt(Math.pow(p.vel.x, 2) + Math.pow(p.vel.y, 2));
+    p.walkCycle += p.walkDirection * magnitude * 0.1 * _main.time;
+    if (p.walkDirection * p.walkCycle > 1) {
+      p.walkDirection *= -1;
+    }
+  } else {
+    var sign = Math.sign(p.walkCycle);
+    p.walkCycle -= sign * 0.1;
+    if (Math.sign(p.walkCycle) != sign) {
+      p.walkCycle = 0;
+    }
+  }
+  p.leftLeg.vertices[1].x = p.walkCycle * 30;
+  p.rightLeg.vertices[1].x = -p.walkCycle * 30;
+
+  for (var i = 0; i < _main.bulletList.length; i++) {
+    _main.bulletList[i].shell.translation.set(_main.two.width / 2 + _main.bulletList[i].pos.x, _main.two.height / 2 - _main.bulletList[i].pos.y);
+  }
+
+  p.body.translation.set(_main.two.width / 2 + p.pos.x, _main.two.height / 2 + p.pos.y * -1);
+  p.body.rotation = -p.facingAngle;
+}
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.bullet = bullet;
+
+var _main = __webpack_require__(0);
+
+var _Vec = __webpack_require__(2);
+
+function bullet(p, angle, posx, posy) {
+  this.owner = p;
+
+  this.pos = new _Vec.Vec(posx, posy);
+
+  this.angle = angle;
+
+  this.speed = 30;
+
+  this.life = 0;
+
+  this.shell = _main.two.makeCircle(0, 0, 5);
+  this.shell.translation.set(_main.two.width / 2 + this.pos.x, _main.two.height / 2 + this.pos.y);
+  this.shell.fill = "#dddd33";
+  this.shell.noStroke();
+
+  this.physics = function () {
+    this.life += _main.time;
+    if (this.life > 100) {
+      return true;
+    }
+    this.pos.x += Math.cos(this.angle) * this.speed * _main.time;
+    this.pos.y += Math.sin(this.angle) * this.speed * _main.time;
+    return false;
+  };
+}
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.CircleCollider = CircleCollider;
 
-var _Point = __webpack_require__(6);
+var _Point = __webpack_require__(8);
 
 function CircleCollider() {
   var radius = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
@@ -518,7 +671,7 @@ function CircleCollider() {
 }
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -537,7 +690,7 @@ function Point() {
 }
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -546,21 +699,19 @@ function Point() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Vec = Vec;
-function Vec() {
-  var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-  var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+exports.StateMachine = StateMachine;
 
-  this.x = x;
-  this.y = y;
+var _wait = __webpack_require__(14);
 
-  this.Dot = function (vec) {
-    return this.x * vec.x + this.y * vec.y;
-  };
+var _curve = __webpack_require__(10);
+
+function StateMachine() {
+  this.wait = _wait.wait;
+  this.curve = _curve.curve;
 }
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -569,38 +720,135 @@ function Vec() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.bullet = bullet;
-
-var _main = __webpack_require__(1);
-
-var _Vec = __webpack_require__(7);
-
-function bullet(p, angle, posx, posy) {
-  this.owner = p;
-
-  this.pos = new _Vec.Vec(posx, posy);
-
-  this.angle = angle;
-
-  this.speed = 20;
-
-  this.life = 0;
-
-  this.shell = _main.two.makeCircle(0, 0, 5);
-  this.shell.translation.set(_main.two.width / 2 + this.pos.x, _main.two.height / 2 + this.pos.y);
-  this.shell.fill = "#bb3333";
-  this.shell.noStroke();
-
-  this.physics = function () {
-    this.life++;
-    if (this.life > 100) {
-      return true;
-    }
-    this.pos.x += Math.cos(this.angle) * this.speed;
-    this.pos.y += Math.sin(this.angle) * this.speed;
+var curve = exports.curve = {
+  init: function init(p) {
+    p.action = "curve";
+    this.main(p);
+  },
+  main: function main(p) {
+    if (!this.interrupt(p)) {}
+  },
+  interrupt: function interrupt(p) {
     return false;
-  };
+  },
+  exit: function exit(p) {}
+};
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Guns = Guns;
+exports.fireBullet = fireBullet;
+
+var _pistol = __webpack_require__(13);
+
+var _machineGun = __webpack_require__(12);
+
+var _main = __webpack_require__(0);
+
+var _bullet = __webpack_require__(6);
+
+function Guns() {
+  this.pistol = _pistol.pistol;
+  this.machineGun = _machineGun.machineGun;
 }
+
+function fireBullet(p) {
+  _main.bulletList.push(new _bullet.bullet(p, p.facingAngle, p.pos.x + Math.cos(p.facingAngle) * p.gunShape.vertices[1].x, p.pos.y + Math.sin(p.facingAngle) * p.gunShape.vertices[1].x));
+}
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.machineGun = machineGun;
+
+var _main = __webpack_require__(0);
+
+var _Guns = __webpack_require__(11);
+
+function machineGun(p) {
+  if (!p.gunLockout) {
+    if (p.input.rTrigger[0] >= 0.3) {
+      (0, _Guns.fireBullet)(p);
+      p.gunLockout = true;
+      p.gunLockoutTimer = 5;
+    }
+  } else {
+    if (p.gunLockoutTimer > 0) {
+      p.gunLockoutTimer -= _main.time;
+    } else {
+      p.gunLockout = false;
+    }
+  }
+}
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.pistol = pistol;
+
+var _Guns = __webpack_require__(11);
+
+function pistol(p) {
+  if (!p.gunLockout) {
+    if (p.input.rTrigger[0] >= 0.3) {
+      (0, _Guns.fireBullet)(p);
+      p.gunLockout = true;
+    }
+  } else if (p.input.rTrigger[0] < 0.3) {
+    p.gunLockout = false;
+  }
+}
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var wait = exports.wait = {
+  init: function init(p) {
+    p.action = "wait";
+    this.main(p);
+  },
+  main: function main(p) {
+    if (!this.interrupt(p)) {
+      if (p.input.x[0] && !p.input.x[1]) {
+        p.switchGun(1);
+      }
+      p.guns[p.gunList[p.currentGun]](p);
+    }
+  },
+  interrupt: function interrupt(p) {
+    return false;
+  },
+  exit: function exit(p) {}
+};
 
 /***/ })
 /******/ ]);

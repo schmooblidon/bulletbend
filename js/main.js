@@ -15,6 +15,13 @@ export let bulletList = [];
 
 // setting up other variables
 let playing = false;
+export let time = 1;
+
+export function setTime(t) {
+  time = t;
+}
+
+// storing html elements
 const startPrompt = document.getElementById("startPrompt");
 const pauseScreen = document.getElementById("pause");
 
