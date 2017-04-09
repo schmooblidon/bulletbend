@@ -1,6 +1,8 @@
+import {curve} from "./curve";
+
 export const wait = {
   init : function(p) {
-    p.action = "wait";
+    p.currentState = "wait";
     this.main(p);
   },
   main : function(p) {
@@ -12,6 +14,10 @@ export const wait = {
     }
   },
   interrupt : function(p) {
+    if (p.input.lBumper[0] && !p.input.lBumper[1]) {
+      curve.init(p);
+      return true;
+    }
     return false;
   },
   exit : function(p) {

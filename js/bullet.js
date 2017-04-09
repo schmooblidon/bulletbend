@@ -1,14 +1,16 @@
 import {two, time} from "./main";
 import {Vec} from "./utils/Vec";
 
-export function bullet(p, angle, posx, posy) {
+export function bullet(p, angle, posx, posy, curve) {
   this.owner = p;
 
   this.pos = new Vec(posx, posy);
 
   this.angle = angle;
 
-  this.speed = 30;
+  this.vel = new Vec(Math.cos(this.angle)*30, Math.sin(this.angle)*30);
+
+  this.curvePower = curve;
 
   this.life = 0;
 
@@ -22,8 +24,19 @@ export function bullet(p, angle, posx, posy) {
     if (this.life > 100) {
       return true;
     }
-    this.pos.x += Math.cos(this.angle) * this.speed * time;
-    this.pos.y += Math.sin(this.angle) * this.speed * time;
+    let angleChange = 0;
+    if (this.life < 20) {
+      angleChange = (-this.curvePower / Math.max(1, 20 - this.life)) * 0.05 * time;
+    }
+    else {
+      angleChange = (-this.curvePower / (this.life-19)) * 0.1 * time;
+    }
+    
+    this.vel.x = this.vel.x * Math.cos(angleChange) - this.vel.y * Math.sin(angleChange);
+    this.vel.y = this.vel.x * Math.sin(angleChange) + this.vel.y * Math.cos(angleChange);
+
+    this.pos.x += this.vel.x * time;
+    this.pos.y += this.vel.y * time;
     return false;
   }
 }

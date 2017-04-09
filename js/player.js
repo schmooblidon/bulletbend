@@ -20,6 +20,7 @@ export function player() {
   this.gunList = ["pistol", "machineGun"];
   this.stateMachine = new StateMachine();
   this.currentState = "wait";
+  this.timer = 0;
 
   this.switchGun = function(move) {
     this.currentGun += move;
@@ -34,6 +35,7 @@ export function player() {
   this.bulletTimeActive = false;
 
   this.facingAngle = Math.PI/2;
+  this.gunAngle = Math.PI/2;
 
   this.collider = new CircleCollider();
 
@@ -71,6 +73,20 @@ export function player() {
 
   this.walkCycle = 0;
   this.walkDirection = 1;
+
+  // used for animations
+  this.skeleton = {
+    leftLeg : [new Vec(0, -15), new Vec(0, -15)],
+    rightLeg : [new Vec(0, 15), new Vec(0, 15)],
+
+    upperArm : [new Vec(0, 0), new Vec(0, 0)],
+    upperArmAngle : Math.PI/8,
+    upperArmLength : 30,
+
+    foreArm : [new Vec(0, 0), new Vec(0, 0)],
+    foreArmAngle : -Math.PI/8,
+    foreArmLength : 30
+  }
 
   this.body = two.makeGroup(this.legs, this.arm, this.gunShape, this.head);
   this.body.translation.set(two.width/2, two.height/2);

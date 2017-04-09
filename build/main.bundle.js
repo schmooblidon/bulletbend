@@ -79,13 +79,13 @@ Object.defineProperty(exports, "__esModule", {
 exports.time = exports.bulletList = exports.p = exports.two = undefined;
 exports.setTime = setTime;
 
-var _player = __webpack_require__(4);
+var _player = __webpack_require__(6);
 
-var _physics = __webpack_require__(3);
+var _physics = __webpack_require__(5);
 
-var _render = __webpack_require__(5);
+var _render = __webpack_require__(7);
 
-var _input = __webpack_require__(1);
+var _input = __webpack_require__(2);
 
 // setting up renderer
 var elem = document.getElementById("game");
@@ -155,6 +155,36 @@ start();
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Guns = Guns;
+exports.fireBullet = fireBullet;
+
+var _pistol = __webpack_require__(11);
+
+var _machineGun = __webpack_require__(10);
+
+var _main = __webpack_require__(0);
+
+var _bullet = __webpack_require__(3);
+
+function Guns() {
+  this.pistol = _pistol.pistol;
+  this.machineGun = _machineGun.machineGun;
+}
+
+function fireBullet(p, curve) {
+  _main.bulletList.push(new _bullet.bullet(p, p.gunAngle, p.pos.x + p.gunShape.vertices[1].x * Math.cos(p.facingAngle) - -p.gunShape.vertices[1].y * Math.sin(p.facingAngle), p.pos.y + (p.gunShape.vertices[1].x * Math.sin(p.facingAngle) + -p.gunShape.vertices[1].y * Math.cos(p.facingAngle)), curve ? p.timer : 0));
+}
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -337,7 +367,62 @@ function disabledEventPropagation(e) {
 }
 
 /***/ }),
-/* 2 */
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.bullet = bullet;
+
+var _main = __webpack_require__(0);
+
+var _Vec = __webpack_require__(4);
+
+function bullet(p, angle, posx, posy, curve) {
+  this.owner = p;
+
+  this.pos = new _Vec.Vec(posx, posy);
+
+  this.angle = angle;
+
+  this.vel = new _Vec.Vec(Math.cos(this.angle) * 30, Math.sin(this.angle) * 30);
+
+  this.curvePower = curve;
+
+  this.life = 0;
+
+  this.shell = _main.two.makeCircle(0, 0, 5);
+  this.shell.translation.set(_main.two.width / 2 + this.pos.x, _main.two.height / 2 + this.pos.y);
+  this.shell.fill = "#dddd33";
+  this.shell.noStroke();
+
+  this.physics = function () {
+    this.life += _main.time;
+    if (this.life > 100) {
+      return true;
+    }
+    var angleChange = 0;
+    if (this.life < 20) {
+      angleChange = -this.curvePower / Math.max(1, 20 - this.life) * 0.05 * _main.time;
+    } else {
+      angleChange = -this.curvePower / (this.life - 19) * 0.1 * _main.time;
+    }
+
+    this.vel.x = this.vel.x * Math.cos(angleChange) - this.vel.y * Math.sin(angleChange);
+    this.vel.y = this.vel.x * Math.sin(angleChange) + this.vel.y * Math.cos(angleChange);
+
+    this.pos.x += this.vel.x * _main.time;
+    this.pos.y += this.vel.y * _main.time;
+    return false;
+  };
+}
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -360,7 +445,7 @@ function Vec() {
 }
 
 /***/ }),
-/* 3 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -373,7 +458,7 @@ exports.physics = physics;
 
 var _main = __webpack_require__(0);
 
-var _bullet = __webpack_require__(6);
+var _bullet = __webpack_require__(3);
 
 function physics(p) {
   if (p.input.magnitude[0] > 0) {
@@ -435,6 +520,7 @@ function physics(p) {
   if (p.input.rMagnitude[0] > 0) {
     p.facingAngle = p.input.rAngle[0];
   }
+  p.gunAngle = p.facingAngle;
 
   p.stateMachine[p.currentState].main(p);
 
@@ -456,7 +542,7 @@ function physics(p) {
 }
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -467,17 +553,17 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.player = player;
 
-var _Vec = __webpack_require__(2);
+var _Vec = __webpack_require__(4);
 
-var _CircleCollider = __webpack_require__(7);
+var _CircleCollider = __webpack_require__(13);
 
 var _main = __webpack_require__(0);
 
-var _input = __webpack_require__(1);
+var _input = __webpack_require__(2);
 
-var _Guns = __webpack_require__(11);
+var _Guns = __webpack_require__(1);
 
-var _StateMachine = __webpack_require__(9);
+var _StateMachine = __webpack_require__(8);
 
 function player() {
   this.pos = new _Vec.Vec();
@@ -494,6 +580,7 @@ function player() {
   this.gunList = ["pistol", "machineGun"];
   this.stateMachine = new _StateMachine.StateMachine();
   this.currentState = "wait";
+  this.timer = 0;
 
   this.switchGun = function (move) {
     this.currentGun += move;
@@ -507,6 +594,7 @@ function player() {
   this.bulletTimeActive = false;
 
   this.facingAngle = Math.PI / 2;
+  this.gunAngle = Math.PI / 2;
 
   this.collider = new _CircleCollider.CircleCollider();
 
@@ -545,6 +633,20 @@ function player() {
   this.walkCycle = 0;
   this.walkDirection = 1;
 
+  // used for animations
+  this.skeleton = {
+    leftLeg: [new _Vec.Vec(0, -15), new _Vec.Vec(0, -15)],
+    rightLeg: [new _Vec.Vec(0, 15), new _Vec.Vec(0, 15)],
+
+    upperArm: [new _Vec.Vec(0, 0), new _Vec.Vec(0, 0)],
+    upperArmAngle: Math.PI / 8,
+    upperArmLength: 30,
+
+    foreArm: [new _Vec.Vec(0, 0), new _Vec.Vec(0, 0)],
+    foreArmAngle: -Math.PI / 8,
+    foreArmLength: 30
+  };
+
   this.body = _main.two.makeGroup(this.legs, this.arm, this.gunShape, this.head);
   this.body.translation.set(_main.two.width / 2, _main.two.height / 2);
 
@@ -552,7 +654,7 @@ function player() {
 }
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -567,19 +669,19 @@ var _main = __webpack_require__(0);
 
 function render(p) {
 
-  p.upperArm.vertices[1].x = Math.cos(-p.upperArmAngle) * p.upperArmLength;
-  p.upperArm.vertices[1].y = -Math.sin(-p.upperArmAngle) * p.upperArmLength;
+  p.upperArm.vertices[1].x = Math.cos(-p.skeleton.upperArmAngle) * p.upperArmLength;
+  p.upperArm.vertices[1].y = -Math.sin(-p.skeleton.upperArmAngle) * p.upperArmLength;
 
   p.foreArm.vertices[0].x = p.upperArm.vertices[1].x;
   p.foreArm.vertices[0].y = p.upperArm.vertices[1].y;
 
-  p.foreArm.vertices[1].x = p.foreArm.vertices[0].x + Math.cos(-p.foreArmAngle) * p.foreArmLength;
-  p.foreArm.vertices[1].y = p.foreArm.vertices[0].y - Math.sin(-p.foreArmAngle) * p.foreArmLength;
+  p.foreArm.vertices[1].x = p.foreArm.vertices[0].x + Math.cos(-p.skeleton.foreArmAngle) * p.foreArmLength;
+  p.foreArm.vertices[1].y = p.foreArm.vertices[0].y - Math.sin(-p.skeleton.foreArmAngle) * p.foreArmLength;
 
   p.gunShape.vertices[0].x = p.foreArm.vertices[1].x;
   p.gunShape.vertices[0].y = p.foreArm.vertices[1].y;
-  p.gunShape.vertices[1].x = p.gunShape.vertices[0].x + 15;
-  p.gunShape.vertices[1].y = p.gunShape.vertices[0].y;
+  p.gunShape.vertices[1].x = p.gunShape.vertices[0].x + Math.cos(p.gunAngle - p.facingAngle) * 15;
+  p.gunShape.vertices[1].y = p.gunShape.vertices[0].y - Math.sin(p.gunAngle - p.facingAngle) * 15;
 
   if (Math.abs(p.vel.x) > 0 || Math.abs(p.vel.y) > 0) {
     var magnitude = Math.sqrt(Math.pow(p.vel.x, 2) + Math.pow(p.vel.y, 2));
@@ -606,7 +708,7 @@ function render(p) {
 }
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -615,41 +717,173 @@ function render(p) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.bullet = bullet;
+exports.StateMachine = StateMachine;
 
-var _main = __webpack_require__(0);
+var _wait = __webpack_require__(12);
 
-var _Vec = __webpack_require__(2);
+var _curve = __webpack_require__(9);
 
-function bullet(p, angle, posx, posy) {
-  this.owner = p;
-
-  this.pos = new _Vec.Vec(posx, posy);
-
-  this.angle = angle;
-
-  this.speed = 30;
-
-  this.life = 0;
-
-  this.shell = _main.two.makeCircle(0, 0, 5);
-  this.shell.translation.set(_main.two.width / 2 + this.pos.x, _main.two.height / 2 + this.pos.y);
-  this.shell.fill = "#dddd33";
-  this.shell.noStroke();
-
-  this.physics = function () {
-    this.life += _main.time;
-    if (this.life > 100) {
-      return true;
-    }
-    this.pos.x += Math.cos(this.angle) * this.speed * _main.time;
-    this.pos.y += Math.sin(this.angle) * this.speed * _main.time;
-    return false;
-  };
+function StateMachine() {
+  this.wait = _wait.wait;
+  this.curve = _curve.curve;
 }
 
 /***/ }),
-/* 7 */
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.curve = undefined;
+
+var _wait = __webpack_require__(12);
+
+var _main = __webpack_require__(0);
+
+var curve = exports.curve = {
+  init: function init(p) {
+    p.currentState = "curve";
+    p.timer = 0;
+    this.main(p);
+  },
+  main: function main(p) {
+    p.timer += _main.time;
+    if (!this.interrupt(p)) {
+
+      p.gunAngle = p.facingAngle - p.skeleton.foreArmAngle - Math.PI / 16;
+
+      if (p.timer < 7) {
+        p.skeleton.upperArmAngle -= p.timer * 0.05 * _main.time;
+        p.skeleton.foreArmAngle -= p.timer * 0.1 * _main.time;
+        p.guns[p.gunList[p.currentGun]](p, true);
+      } else if (p.timer > 23) {
+        p.skeleton.upperArmAngle -= (p.timer - 25) * -0.01 * _main.time;
+        p.skeleton.foreArmAngle -= (p.timer - 25) * -0.02 * _main.time;
+        p.guns[p.gunList[p.currentGun]](p);
+      } else {
+        p.guns[p.gunList[p.currentGun]](p);
+      }
+    } else {
+      this.exit(p);
+    }
+  },
+  interrupt: function interrupt(p) {
+    if (p.timer >= 40) {
+      _wait.wait.init(p);
+      return true;
+    }
+    return false;
+  },
+  exit: function exit(p) {
+    p.skeleton.upperArmAngle = Math.PI / 8;
+    p.skeleton.foreArmAngle = -Math.PI / 8;
+  }
+};
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.machineGun = machineGun;
+
+var _main = __webpack_require__(0);
+
+var _Guns = __webpack_require__(1);
+
+function machineGun(p) {
+  var curve = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+  if (!p.gunLockout) {
+    if (p.input.rTrigger[0] >= 0.3) {
+      (0, _Guns.fireBullet)(p, curve);
+      p.gunLockout = true;
+      p.gunLockoutTimer = 5;
+    }
+  } else {
+    if (p.gunLockoutTimer > 0) {
+      p.gunLockoutTimer -= _main.time;
+    } else {
+      p.gunLockout = false;
+    }
+  }
+}
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.pistol = pistol;
+
+var _Guns = __webpack_require__(1);
+
+function pistol(p) {
+  var curve = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+  if (!p.gunLockout) {
+    if (p.input.rTrigger[0] >= 0.3) {
+      (0, _Guns.fireBullet)(p, curve);
+      p.gunLockout = true;
+    }
+  } else if (p.input.rTrigger[0] < 0.3) {
+    p.gunLockout = false;
+  }
+}
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.wait = undefined;
+
+var _curve = __webpack_require__(9);
+
+var wait = exports.wait = {
+  init: function init(p) {
+    p.currentState = "wait";
+    this.main(p);
+  },
+  main: function main(p) {
+    if (!this.interrupt(p)) {
+      if (p.input.x[0] && !p.input.x[1]) {
+        p.switchGun(1);
+      }
+      p.guns[p.gunList[p.currentGun]](p);
+    }
+  },
+  interrupt: function interrupt(p) {
+    if (p.input.lBumper[0] && !p.input.lBumper[1]) {
+      _curve.curve.init(p);
+      return true;
+    }
+    return false;
+  },
+  exit: function exit(p) {}
+};
+
+/***/ }),
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -660,7 +894,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.CircleCollider = CircleCollider;
 
-var _Point = __webpack_require__(8);
+var _Point = __webpack_require__(14);
 
 function CircleCollider() {
   var radius = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
@@ -671,7 +905,7 @@ function CircleCollider() {
 }
 
 /***/ }),
-/* 8 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -688,167 +922,6 @@ function Point() {
   this.x = x;
   this.y = y;
 }
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.StateMachine = StateMachine;
-
-var _wait = __webpack_require__(14);
-
-var _curve = __webpack_require__(10);
-
-function StateMachine() {
-  this.wait = _wait.wait;
-  this.curve = _curve.curve;
-}
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var curve = exports.curve = {
-  init: function init(p) {
-    p.action = "curve";
-    this.main(p);
-  },
-  main: function main(p) {
-    if (!this.interrupt(p)) {}
-  },
-  interrupt: function interrupt(p) {
-    return false;
-  },
-  exit: function exit(p) {}
-};
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Guns = Guns;
-exports.fireBullet = fireBullet;
-
-var _pistol = __webpack_require__(13);
-
-var _machineGun = __webpack_require__(12);
-
-var _main = __webpack_require__(0);
-
-var _bullet = __webpack_require__(6);
-
-function Guns() {
-  this.pistol = _pistol.pistol;
-  this.machineGun = _machineGun.machineGun;
-}
-
-function fireBullet(p) {
-  _main.bulletList.push(new _bullet.bullet(p, p.facingAngle, p.pos.x + Math.cos(p.facingAngle) * p.gunShape.vertices[1].x, p.pos.y + Math.sin(p.facingAngle) * p.gunShape.vertices[1].x));
-}
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.machineGun = machineGun;
-
-var _main = __webpack_require__(0);
-
-var _Guns = __webpack_require__(11);
-
-function machineGun(p) {
-  if (!p.gunLockout) {
-    if (p.input.rTrigger[0] >= 0.3) {
-      (0, _Guns.fireBullet)(p);
-      p.gunLockout = true;
-      p.gunLockoutTimer = 5;
-    }
-  } else {
-    if (p.gunLockoutTimer > 0) {
-      p.gunLockoutTimer -= _main.time;
-    } else {
-      p.gunLockout = false;
-    }
-  }
-}
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.pistol = pistol;
-
-var _Guns = __webpack_require__(11);
-
-function pistol(p) {
-  if (!p.gunLockout) {
-    if (p.input.rTrigger[0] >= 0.3) {
-      (0, _Guns.fireBullet)(p);
-      p.gunLockout = true;
-    }
-  } else if (p.input.rTrigger[0] < 0.3) {
-    p.gunLockout = false;
-  }
-}
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var wait = exports.wait = {
-  init: function init(p) {
-    p.action = "wait";
-    this.main(p);
-  },
-  main: function main(p) {
-    if (!this.interrupt(p)) {
-      if (p.input.x[0] && !p.input.x[1]) {
-        p.switchGun(1);
-      }
-      p.guns[p.gunList[p.currentGun]](p);
-    }
-  },
-  interrupt: function interrupt(p) {
-    return false;
-  },
-  exit: function exit(p) {}
-};
 
 /***/ })
 /******/ ]);

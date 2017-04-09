@@ -68,6 +68,7 @@ export function physics(p) {
   if (p.input.rMagnitude[0] > 0) {
     p.facingAngle = p.input.rAngle[0];
   }
+  p.gunAngle = p.facingAngle;
 
   p.stateMachine[p.currentState].main(p);
 

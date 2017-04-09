@@ -3,19 +3,19 @@ import {two, bulletList, time} from "./main";
 export function render(p) {
 
 
-  p.upperArm.vertices[1].x = Math.cos(-p.upperArmAngle) * p.upperArmLength;
-  p.upperArm.vertices[1].y = -Math.sin(-p.upperArmAngle) * p.upperArmLength;
+  p.upperArm.vertices[1].x = Math.cos(-p.skeleton.upperArmAngle) * p.upperArmLength;
+  p.upperArm.vertices[1].y = -Math.sin(-p.skeleton.upperArmAngle) * p.upperArmLength;
 
   p.foreArm.vertices[0].x = p.upperArm.vertices[1].x;
   p.foreArm.vertices[0].y = p.upperArm.vertices[1].y;
 
-  p.foreArm.vertices[1].x = p.foreArm.vertices[0].x + Math.cos(-p.foreArmAngle) * p.foreArmLength;
-  p.foreArm.vertices[1].y = p.foreArm.vertices[0].y - Math.sin(-p.foreArmAngle) * p.foreArmLength;
+  p.foreArm.vertices[1].x = p.foreArm.vertices[0].x + Math.cos(-p.skeleton.foreArmAngle) * p.foreArmLength;
+  p.foreArm.vertices[1].y = p.foreArm.vertices[0].y - Math.sin(-p.skeleton.foreArmAngle) * p.foreArmLength;
 
   p.gunShape.vertices[0].x = p.foreArm.vertices[1].x;
   p.gunShape.vertices[0].y = p.foreArm.vertices[1].y;
-  p.gunShape.vertices[1].x = p.gunShape.vertices[0].x + 15;
-  p.gunShape.vertices[1].y = p.gunShape.vertices[0].y;
+  p.gunShape.vertices[1].x = p.gunShape.vertices[0].x + Math.cos(p.gunAngle - p.facingAngle) * 15;
+  p.gunShape.vertices[1].y = p.gunShape.vertices[0].y - Math.sin(p.gunAngle - p.facingAngle) * 15;
 
   if (Math.abs(p.vel.x) > 0 || Math.abs(p.vel.y) > 0) {
     let magnitude = Math.sqrt(Math.pow(p.vel.x, 2) + Math.pow(p.vel.y, 2));
